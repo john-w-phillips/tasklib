@@ -22,8 +22,8 @@ t_rcinit() {
     if [ -n "$TASK_SHELL_ENTER" ]
     then
 	export TASK="$TASK_SHELL_ENTER"
-	unset "$TASK_SHELL_ENTER"
-	t_enter "$TASK_SHELL_ENTER"
+	unset TASK_SHELL_ENTER
+	t_enter "$TASK"
     fi
 }
 
@@ -111,9 +111,9 @@ t_new() {
 	t_enter "$TASK"
     fi
 }
+alias t.new=t_new
 
-
-# t.enter enters the ticket environment in the current shell instance.
+# t_enter enters the ticket environment in the current shell instance.
 t_enter() {
     if [ -z "$1" ]
     then
@@ -129,6 +129,8 @@ t_enter() {
 	# shellcheck disable=SC1090	
 	. "$glbl_rcfile"
     fi
+
+    export TASK="$1"
 
     lcl_rcfile="$TASKS_DIR/$1/etc/.taskrc"
 
@@ -149,6 +151,7 @@ t_enter() {
 	echo "there is no task $1?"
     fi
 }
+alias t.enter=t_enter
 
 t_shell() {
     if [ -z "$1" ]
@@ -158,6 +161,7 @@ t_shell() {
     fi    
     TASK_SHELL_ENTER="$1" "$SHELL" -i
 }
+alias t.sh=t_shell
 
 t_worktree() {
     if [ -z "$1" ]
@@ -180,7 +184,7 @@ t_worktree() {
 
     if [ -z "$2" ]
     then
-	wdir="TASK_LOC/src/$1"
+	wdir="$TASK_LOC/src/$1"
     elif [ -d "$(dirname "$TASK_LOC/src/$2")" ]
     then
 	wdir="$TASK_LOC/src/$2"
@@ -199,6 +203,7 @@ t_worktree() {
     
     git -C "$repodir" worktree add -b "$TASK" "$wdir" "$head"
 }
+alias t.worktree=t_worktree
 
 t_cd() {
     if [ -z "$1" ]
@@ -240,6 +245,7 @@ t_cd() {
 	fi
     fi
 }
+alias t.cd=t_cd
 
 t_install_files() {
     if ! [ -d "./.git" ] || ! [ -f "./tasklib.sh" ]
@@ -301,8 +307,9 @@ __t_rcfile() {
 # t_install_rc installs the rc hooks -- source the tasklib.sh file,
 # and execute the t_rcinit func.
 t_install_rc() {
-    # shellcheck disable=SC2016
     t_log "installing hooks in $(__t_rcfile)"
+
+    # shellcheck disable=SC2016
     if ! grep '. $HOME/.trc/tasklib.sh' "$(__t_rcfile)" > /dev/null
     then
 	{
@@ -315,6 +322,26 @@ t_install_rc() {
     if ! grep 't_rcinit' "$(__t_rcfile)" > /dev/null
     then
 	echo "t_rcinit" >> "$(__t_rcfile)"
+    fi
+}
+
+t_set() {
+    if [ -z "$TASK_LOC" ]
+    then
+	t_err "not in a task"
+	return
+    fi
+
+    if (echo "$1" | grep -E '^[a-zA-Z_0-9]+=.*$')
+    then
+	echo "$1" >> "$TASK_LOC/etc/.taskrc"
+	export "${1?}"
+	t_log "Set var $1"
+    elif [ -n "$1" ] && [ -n "$2" ]
+    then
+	echo "$1=$2" >> "$TASK_LOC/etc/.taskrc"
+	export "${1?}=${2?}"
+	t_log "Set var $1=$2"
     fi
 }
 
@@ -335,20 +362,31 @@ tasklib.sh functions --
 
     flavor -- if --flavor=<flavor> is passed then the ticket rc file
     will also source the rcfile for the flavor in
-    $HOME/.trc/flavors/<flavor> on entry.
+    \$HOME/.trc/flavors/<flavor> on entry.
 
 
-  t_enter <task-name> - enters the task.
+  t_enter <task-name> - enters the task. This means sourcing the task
+  rc file in \$TASK_LOC/etc/.taskrc, then cd'ing to \$TASK_LOC.
 
 
-  t_shell <task-name> - enters the task in a new subshell.
+  t_shell <task-name> - enters the task in a new subshell. This
+  requires the correct rc setup, where you run the t_rcinit func in
+  your rc file.
 
 
   t_worktree <repository> - creates a git worktree for the repository
-  in the task's source folder.
+  in the task's source folder, using the current task name as a branch.
 
+  t_set <var>=<value> or t_set var value - adds the export of
+  var=value to the current taskrc file.
 _EOF_
 }
+alias t.help=t_help
+
+t_task() {
+    echo "$TASK"
+}
+alias t.task=t_task
 
 # t_install installs tasklib.sh locally.
 t_install() {
