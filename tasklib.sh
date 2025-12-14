@@ -73,8 +73,8 @@ t_new() {
     t_dbg "args: ${argslist}"
     if [ -z "$task" ]
     then
-	echo "t.new needs a ticket, usage:"
-	echo "t.new [options...] <ticket-name>"
+	echo "t.new needs a task, usage:"
+	echo "t.new [options...] <task-name>"
 	return
     fi
 
@@ -100,7 +100,7 @@ t_new() {
     fi
 
     {
-	printf "%s\n" "${argslist}";
+	printf "%b\n" "${argslist}";
 	printf "TASK=%s\n" "$TASK";
 	printf "TASK_LOC=%s\n" "$TASK_LOC";
     } >> "$TASK_LOC/etc/.taskrc"
@@ -248,7 +248,7 @@ t_cd() {
 alias t.cd=t_cd
 
 t_install_files() {
-    if ! [ -d "./.git" ] || ! [ -f "./tasklib.sh" ]
+    if ! [ -e "./.git" ] || ! [ -f "./tasklib.sh" ]
     then
 	t_err "can't install from here, I need to be in the tasklib git."
 	return
@@ -257,22 +257,21 @@ t_install_files() {
     t_log "making the .trc directory"
     mkdir -p "$HOME/.trc"
     t_log "making tasklib symlink..."
-    if ! ln -s "$PWD/tasklib.sh" "$HOME/.trc/tasklib.sh"
+    if [ -e "$HOME/.trc/tasklib.sh" ]
     then
-	if ! [ -h "$HOME/.trc/tasklib.sh" ]
-	then
-	    t_err "tasklib.sh exists and isn't a symlink..."
+	unlink "$HOME/.trc/tasklib.sh" || {
+	    t_err "tasklib.sh already is installed and can't be removed";
 	    return
-	else
-	    t_log "symlink exists, continuing..."
-	fi
+	}
     fi
+    ln -s "$PWD/tasklib.sh" "$HOME/.trc/tasklib.sh"
 	   
     mkdir -p "$HOME/.trc/flavors"
-
+    t_dbg "the flavor, arg 1 is: $1"
     if [ -n "$1" ] && [ -d "$PWD/templates/$1" ]
     then
-	cp -R "$PWD/templates/$1" "$HOME/.trc/" || {
+	t_log "copying template: $1"
+	cp -R "$PWD/templates/$1/" "$HOME/.trc/" || {
 	    t_err "copying template $1 failed.";
 	    return;
 	}
@@ -355,12 +354,12 @@ tasklib.sh functions --
     task with t_enter.
 
     each option is stripped of initial dashes and exported in the
-    local ticket rc file so that when you enter the ticket those env
+    local task rc file so that when you enter the task those env
     vars are created.
 
     special options --
 
-    flavor -- if --flavor=<flavor> is passed then the ticket rc file
+    flavor -- if --flavor=<flavor> is passed then the task rc file
     will also source the rcfile for the flavor in
     \$HOME/.trc/flavors/<flavor> on entry.
 
