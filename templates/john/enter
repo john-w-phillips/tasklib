@@ -1,0 +1,5 @@
+# -*- mode: sh -*-
+if [ -z "$INSIDE_EMACS" ]
+then
+    emacsclient -s $TICKET -c
+fi
