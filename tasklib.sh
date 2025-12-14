@@ -248,7 +248,7 @@ t_cd() {
 alias t.cd=t_cd
 
 t_install_files() {
-    if ! [ -d "./.git" ] || ! [ -f "./tasklib.sh" ]
+    if ! [ -e "./.git" ] || ! [ -f "./tasklib.sh" ]
     then
 	t_err "can't install from here, I need to be in the tasklib git."
 	return
@@ -257,22 +257,21 @@ t_install_files() {
     t_log "making the .trc directory"
     mkdir -p "$HOME/.trc"
     t_log "making tasklib symlink..."
-    if ! ln -s "$PWD/tasklib.sh" "$HOME/.trc/tasklib.sh"
+    if [ -e "$HOME/.trc/tasklib.sh" ]
     then
-	if ! [ -h "$HOME/.trc/tasklib.sh" ]
-	then
-	    t_err "tasklib.sh exists and isn't a symlink..."
+	unlink "$HOME/.trc/tasklib.sh" || {
+	    t_err "tasklib.sh already is installed and can't be removed";
 	    return
-	else
-	    t_log "symlink exists, continuing..."
-	fi
+	}
     fi
+    ln -s "$PWD/tasklib.sh" "$HOME/.trc/tasklib.sh"
 	   
     mkdir -p "$HOME/.trc/flavors"
-
+    t_dbg "the flavor, arg 1 is: $1"
     if [ -n "$1" ] && [ -d "$PWD/templates/$1" ]
     then
-	cp -R "$PWD/templates/$1" "$HOME/.trc/" || {
+	t_log "copying template: $1"
+	cp -R "$PWD/templates/$1/" "$HOME/.trc/" || {
 	    t_err "copying template $1 failed.";
 	    return;
 	}
