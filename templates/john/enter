@@ -1,5 +1,5 @@
 # -*- mode: sh -*-
 if [ -z "$INSIDE_EMACS" ]
 then
-    emacsclient -s $TICKET -c
+    emacsclient -s "$TASK" -c
 fi
