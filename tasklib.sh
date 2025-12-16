@@ -278,8 +278,8 @@ t_install_files() {
     elif ! [ -f "$HOME/.trc/create" ] && ! [ -f "$HOME/.trc/enter" ]
     then
 	t_log "no template specified, creating touchfiles..."
-	printf "# This script sourced on create\n" >>  "$HOME/.trc/create"
-	printf "# This script sourced on enter\n" >>  "$HOME/.trc/enter"
+	printf "# This script sourced on create\n" >  "$HOME/.trc/create"
+	printf "# This script sourced on enter\n" >  "$HOME/.trc/enter"
 	mkdir -p "$HOME/.trc/flavors" || {
 	    t_err "unable to make flavors dir"
 	}
