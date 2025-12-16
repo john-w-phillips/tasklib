@@ -73,8 +73,8 @@ t_new() {
     t_dbg "args: ${argslist}"
     if [ -z "$task" ]
     then
-	echo "t.new needs a ticket, usage:"
-	echo "t.new [options...] <ticket-name>"
+	echo "t.new needs a task, usage:"
+	echo "t.new [options...] <task-name>"
 	return
     fi
 
@@ -100,7 +100,7 @@ t_new() {
     fi
 
     {
-	printf "%s\n" "${argslist}";
+	printf "%b\n" "${argslist}";
 	printf "TASK=%s\n" "$TASK";
 	printf "TASK_LOC=%s\n" "$TASK_LOC";
     } >> "$TASK_LOC/etc/.taskrc"
@@ -354,12 +354,12 @@ tasklib.sh functions --
     task with t_enter.
 
     each option is stripped of initial dashes and exported in the
-    local ticket rc file so that when you enter the ticket those env
+    local task rc file so that when you enter the task those env
     vars are created.
 
     special options --
 
-    flavor -- if --flavor=<flavor> is passed then the ticket rc file
+    flavor -- if --flavor=<flavor> is passed then the task rc file
     will also source the rcfile for the flavor in
     \$HOME/.trc/flavors/<flavor> on entry.
 

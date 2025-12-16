@@ -1,5 +1,8 @@
 # -*- mode: sh -*-
+export GIT_EDITOR="emacsclient -s $TASK"
+export EDITOR="emacsclient -s $TASK"
+
 if [ -z "$INSIDE_EMACS" ]
 then
-    emacsclient -s $TICKET -c
+    emacsclient -s "$TASK" -c
 fi
